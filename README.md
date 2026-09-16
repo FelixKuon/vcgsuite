@@ -9,6 +9,12 @@ P-/QRS-/T-Loop-Features werden berechnet, und HRV-Kennwerte werden bestimmt.
 Dieses Repository ist der Umbau einer Sammlung von Jupyter-Notebook-Skripten in
 ein installierbares, testbares Python-Paket.
 
+<p align="center">
+  <img src="examples/notebooks/img/multibeat_hero.png" alt="Neun übereinandergelegte VCG-Loops einer 10-Sekunden-EKG-Aufnahme" width="600">
+</p>
+
+<p align="center"><em>Neun Herzschläge derselben Aufnahme, automatisch erkannt und übereinandergelegt — siehe <a href="examples/notebooks/00_showcase.ipynb"><code>00_showcase.ipynb</code></a> (läuft ohne eigene Daten, LUDB-Beispiel liegt bei).</em></p>
+
 ## Installation
 
 ```bash
@@ -54,10 +60,13 @@ df_r = ecg.compute_beat_rotation(df_annotations, df_analysis)
 
 ## Beispiel-Notebooks
 
-In `examples/notebooks/` — Demonstration und gleichzeitig Funktionskontrolle
-gegen eine echte Aufnahme (`sample_data/`, lokal, nicht versioniert):
+In `examples/notebooks/`:
 
-1. [`01_load_filter_annotate_visualize.ipynb`](examples/notebooks/01_load_filter_annotate_visualize.ipynb) — Laden, Filtern, VCG-Transformation, Kinematik, R-Peak-Erkennung, Beat-Annotation, 2D-/3D-Visualisierung
+0. [`00_showcase.ipynb`](examples/notebooks/00_showcase.ipynb) — die Kurzversion:
+   ein LUDB-Beispielrecord liegt bei, keine eigenen Daten nötig, läuft in
+   Sekunden durch. R-Peak-Erkennung, Beat-Annotation, 3D-VCG-Trajektorie,
+   Multi-Beat-Overlay, HRV — in wenigen Zellen.
+1. [`01_load_filter_annotate_visualize.ipynb`](examples/notebooks/01_load_filter_annotate_visualize.ipynb) — ausführlicher, gegen eine eigene Aufnahme (`sample_data/`, lokal, nicht versioniert): Laden, Filtern, VCG-Transformation, Kinematik, R-Peak-Erkennung, Beat-Annotation, 2D-/3D-Visualisierung
 2. [`02_feature_extraction.ipynb`](examples/notebooks/02_feature_extraction.ipynb) — P-/QRS-/T-Loop-Features, HRV-Kennwerte, EDR
 
 Ein drittes Notebook zur Aktivierungskarten-Berechnung (Herzmesh + Body-Surface-Potential)
