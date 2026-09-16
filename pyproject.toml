@@ -1,0 +1,73 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vcgsuite"
+version = "0.1.0"
+description = "Python-Bibliothek zur EKG/VCG-Signalverarbeitung: 12-Kanal- und EASI-EKG zu Vektorkardiogramm, R-Zacken-Erkennung, ECG-derived respiration, Frenet-Serret-basierte Beat-Annotation, Loop-Feature-Extraktion und HRV-Analyse."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Felix Kuon" },
+]
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+dependencies = [
+    # Enger gefasste Ranges als üblich: meegkit zieht transitiv pyriemann ->
+    # scikit-learn/statsmodels/matplotlib nach, was pip's Resolver bei offenen
+    # ">="-Ranges auf numpy/scipy in ein sehr langes Backtracking treibt
+    # (dutzende numpy/scipy-Kandidaten werden durchprobiert). Enge Ranges
+    # reduzieren den Suchraum drastisch.
+    "numpy>=1.24,<2.1",
+    "pandas>=2.0,<3",
+    "scipy>=1.10,<1.14",
+    "meegkit>=0.1.6,<0.2",
+    "PyWavelets>=1.4,<2",
+]
+
+[project.optional-dependencies]
+viz = [
+    "plotly>=5.15",
+]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+]
+notebooks = [
+    "jupyter>=1.0",
+    # plotly's fig.show() rendert Grafiken inline im Notebook nur, wenn
+    # nbformat>=4.2.0 im Kernel installiert ist -> ohne das:
+    # "ValueError: Mime type rendering requires nbformat>=4.2.0 but it is
+    # not installed". `pip install jupyter` bringt das NICHT automatisch mit.
+    "nbformat>=4.2.0",
+    "ipykernel>=6.0",
+]
+validation = [
+    # Einlesen von PhysioNet-WFDB-Daten (Signal, Header, Annotationen), z. B.
+    # zur Validierung gegen annotierte Referenzdatenbanken.
+    "wfdb>=4.0",
+    # Für RF-Hybrid-Marker: RandomForestClassifier pro Marker + Speichern/
+    # Laden der trainierten Modelle.
+    "scikit-learn>=1.3",
+    "joblib>=1.3",
+]
+all = [
+    "vcgsuite[viz,dev,notebooks,validation]",
+]
+
+[project.urls]
+Homepage = "https://github.com/FelixKuon/vcgsuite"
+Issues = "https://github.com/FelixKuon/vcgsuite/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vcgsuite"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,30 @@
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.DS_Store
+.ipynb_checkpoints/
+
+# Rohdaten liegen bewusst AUSSERHALB dieses Repos (siehe tests/conftest.py:
+# SAMPLE_DATA_DIR = <Repo-Parent>/sample_data/) und werden daher hier gar
+# nicht erst berührt. Falls doch versehentlich Rohdaten in dieses Repo
+# gelangen, zusätzlich zur Sicherheit ignorieren:
+/sample_data/
+.Rhistory
+
+# Trainierte RF-Hybrid-Modelle aus notebooks/ludb_tuning.ipynb (Teil 2):
+# reproduzierbare Artefakte (aus LUDB neu trainierbar), nicht versioniert,
+# analog zu /sample_data/.
+/notebooks/rf_models/
+
+# LUDB-Rohdaten liegen ebenfalls außerhalb des Repos (siehe
+# notebooks/ludb_common.py: LUDB_DIR = <Repo-Parent>/lobachevsky-university-
+# electrocardiography-database-1.0.1/).
+/lobachevsky-university-electrocardiography-database-1.0.1/

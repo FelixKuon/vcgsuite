@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "vcgsuite: A Python library for ECG/VCG signal processing"
+authors:
+  - family-names: Kuon
+    given-names: Felix
+version: 0.1.0
+date-released: 2026-09-16
+license: MIT
+repository-code: "https://github.com/FelixKuon/vcgsuite"
+abstract: >
+  vcgsuite converts 12-lead and EASI ECG recordings into vectorcardiograms
+  (VCG), detects R-peaks, derives respiration from ECG (EDR), annotates beat
+  landmarks using a Frenet-Serret geometry approach on the 3D VCG trajectory,
+  extracts P/QRS/T loop features, and computes HRV metrics.
