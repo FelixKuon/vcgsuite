@@ -22,7 +22,7 @@ QRS_COLS = ['beat_id',
 
 T_COLS = ['beat_id',
     'T_area', 'T_dipol_norm', 'T_rho', 'T_phi',
-    'T_asym_loop', 'T_round', 'theta_P_T', 'theta_QT_deg',
+    'T_asym_loop', 'T_round', 'theta_P_T', 'theta_QT_deg', 'theta_QT_tp',
     'G_APD', 'T_mean_speed', 'T_asym', 'T_width_ms', 'QTc_Bazett',
     'T_rise_ms', 'T_fall_ms',
 ]

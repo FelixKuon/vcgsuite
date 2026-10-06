@@ -43,8 +43,32 @@ def _slice(df_s: pd.DataFrame, t0: float, t1: float) -> pd.DataFrame:
     return df_s[mask].reset_index(drop=True)
 
 
-def _compute_t_wave_params(row, df_sig: pd.DataFrame) -> dict:
-    """Berechnet T-/QRS-Achsen, QT(c), G_APD, T-Asymmetrie etc. für einen Beat."""
+# TP-Grundlinie für `theta_QT_tp`: Mittel der 40…5 ms VOR P_on, nur wenn der T-Auslauf des
+# vorigen Schlags mindestens 45 ms vorher endet (sonst steckt er in der Grundlinie).
+TP_WINDOW_S = (0.040, 0.005)
+TP_MIN_GAP_S = 0.045
+TP_MIN_SAMPLES = 3
+
+
+def _tp_baseline(df_sig: pd.DataFrame, t_pon: float, prev_t_off: float) -> np.ndarray | None:
+    """Isoelektrische Grundlinie (3-Vektor) auf der TP-Strecke vor `P_on`, sonst None.
+
+    Die Grundlinien `P_on…Q_on` und 20 ms vor `Q_on` sind NICHT geeignet (P-Auslauf,
+    `P_off ≈ Q_on`).
+    """
+    if pd.isna(t_pon) or pd.isna(prev_t_off) or not prev_t_off < t_pon - TP_MIN_GAP_S:
+        return None
+    seg = df_sig[(df_sig['Time'] >= t_pon - TP_WINDOW_S[0]) & (df_sig['Time'] < t_pon - TP_WINDOW_S[1])]
+    if len(seg) < TP_MIN_SAMPLES:
+        return None
+    return seg[['X', 'Y', 'Z']].to_numpy().mean(axis=0)
+
+
+def _compute_t_wave_params(row, df_sig: pd.DataFrame, prev_t_off: float = np.nan) -> dict:
+    """Berechnet T-/QRS-Achsen, QT(c), G_APD, T-Asymmetrie etc. für einen Beat.
+
+    `prev_t_off`: `t_T_off` des vorigen Schlags (für die TP-Grundlinie von `theta_QT_tp`).
+    """
     def g(name):
         return float(row.get(f't_{name}', np.nan))
 
@@ -103,6 +127,18 @@ def _compute_t_wave_params(row, df_sig: pd.DataFrame) -> dict:
         rec['theta_QT_deg'] = float(np.degrees(np.arccos(dot)))
     else:
         rec['theta_QT_deg'] = np.nan
+
+    # QRS-T-Winkel ab TP-Grundlinie: gleiche Flächenvektoren, aber die Integranden werden um die
+    # isoelektrische Grundlinie verschoben. `theta_QT_deg` integriert ab dem Nullpunkt des
+    # Hochpasses; der Versatz verzerrt den Absolutwert um 35–40° (Median 75–89° statt 38–52° mit TP-Grundlinie, Paced-Breathing-Daten).
+    rec['theta_QT_tp'] = np.nan
+    base = _tp_baseline(df_sig, g('P_on'), prev_t_off)
+    if base is not None and qrs_df is not None and len(qrs_df) >= 3 and len(t_df) >= 3:
+        e_Q = np.array([np.trapz(qrs_df[c] - b, tq) for c, b in zip('XYZ', base)])
+        e_Tb = np.array([np.trapz(t_df[c] - b, tv) for c, b in zip('XYZ', base)])
+        nq, nt = np.linalg.norm(e_Q), np.linalg.norm(e_Tb)
+        if nq > 0 and nt > 0:
+            rec['theta_QT_tp'] = float(np.degrees(np.arccos(np.clip(np.dot(e_Q, e_Tb) / (nq * nt), -1.0, 1.0))))
 
     # Geschwindigkeit + G_APD + T_asym
     if len(t_df) >= 4:
@@ -177,11 +213,13 @@ def build_vagus_features(df_analysis: pd.DataFrame,
     df_vagus : pd.DataFrame
     """
     rows = []
+    prev_t_off = np.nan
     for _, row in df_annotations.iterrows():
         try:
-            rows.append(_compute_t_wave_params(row, df_analysis))
+            rows.append(_compute_t_wave_params(row, df_analysis, prev_t_off))
         except Exception as e:
             rows.append({'beat_id': int(row.get('beat_id', -1)), 'error': str(e)})
+        prev_t_off = float(row.get('t_T_off', np.nan))
 
     df_vagus = pd.DataFrame(rows)
     rr = np.diff(df_vagus['t_R_peak+'].to_numpy(dtype=float), prepend=np.nan) * 1000
@@ -232,7 +270,7 @@ def compute_t_wave_features(df_analysis: pd.DataFrame,
     df_merged = df_merged.sort_values('beat_id').reset_index(drop=True)
 
     # ── Vorhandene df_vagus-Features als Lookup ────────────────────────────
-    vagus_cols = ['T_width_ms', 'QT_ms', 'QTc_Bazett', 'theta_QT_deg',
+    vagus_cols = ['T_width_ms', 'QT_ms', 'QTc_Bazett', 'theta_QT_deg', 'theta_QT_tp',
                   'G_APD', 'G_APD_early', 'G_APD_late',
                   'T_mean_speed', 'T_max_speed', 'T_asym',
                   'T_r_max', 'T_r_mean',
